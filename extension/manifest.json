@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Rispondi a tutti + CC (Outlook sul web)",
+  "version": "1.0.0",
+  "description": "Aggiunge a Outlook sul web il pulsante \"Rispondi a tutti + CC\": come Rispondi a tutti, ma mette in CC gli indirizzi configurati.",
+  "permissions": ["storage"],
+  "action": {
+    "default_title": "Rispondi a tutti + CC",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.cloud.microsoft/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "reply-all-cc": {
+      "suggested_key": { "default": "Alt+Shift+C" },
+      "description": "Rispondi a tutti + CC sul messaggio selezionato"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

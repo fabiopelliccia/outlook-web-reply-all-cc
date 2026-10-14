@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mock Outlook web (solo per collaudo del content script)</title>
+<style>
+  body { font: 14px Segoe UI, sans-serif; margin: 20px; }
+  .toolbar button { border: 1px solid #ccc; background: #fff; padding: 4px 8px; margin-right: 4px; }
+  .well { border: 1px solid #aaa; padding: 4px; margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
+  .pill { background: #e1dfdd; border-radius: 10px; padding: 0 8px; }
+  .well [contenteditable] { min-width: 120px; outline: none; flex: 1; }
+</style>
+</head>
+<body>
+<h3>Mock OWA</h3>
+<div class="toolbar" role="toolbar" id="toolbar">
+  <button aria-label="Rispondi" title="Rispondi"><span>R</span></button>
+  <button id="native-replyall" aria-label="Rispondi a tutti" title="Rispondi a tutti (Ctrl+Maiusc+R)"><svg width="16" height="16"><circle cx="8" cy="8" r="6"/></svg></button>
+  <button aria-label="Inoltra" title="Inoltra"><span>I</span></button>
+</div>
+<!-- Per provare il pulsante flottante: aggiungere ?nativo=0 all'URL (nessun "Rispondi a tutti" nella barra) -->
+<script>if (location.search.includes('nativo=0')) document.getElementById('native-replyall').remove();</script>
+<div id="quoted">Da: mittente@originale.com - messaggio originale citato</div>
+<div id="compose-host"></div>
+
+<script>
+  // ---- Mock minimale di chrome.* (nell'estensione reale lo fornisce Chrome) ----
+  const mem = {};
+  const handlers = [];
+  window.chrome = {
+    runtime: { id: 'mock', getManifest: () => ({ version: 'mock' }), onMessage: { addListener: (h) => handlers.push(h) } },
+    storage: { local: {
+      async get(keys) {
+        if (typeof keys === 'string') return keys in mem ? { [keys]: mem[keys] } : {};
+        const out = {}; for (const k of Object.keys(keys)) out[k] = k in mem ? mem[k] : keys[k]; return out;
+      },
+      async set(obj) { Object.assign(mem, JSON.parse(JSON.stringify(obj))); },
+      async remove(k) { delete mem[k]; }
+    } }
+  };
+  window.__send = (msg) => new Promise((res) => { let answered = false; handlers.forEach((h) => h(msg, {}, (r) => { answered = true; res(r); })); if (!answered) res(undefined); });
+  window.__mem = mem;
+
+  // ---- Mock di una bozza di risposta ----
+  function makeWell(labelText, withInput) {
+    const well = document.createElement('div'); well.className = 'well';
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true'); input.setAttribute('role', 'textbox'); input.setAttribute('aria-label', labelText);
+    input.addEventListener('input', () => {
+      const t = input.textContent;
+      if (t.endsWith(';')) {                       // ";" converte il testo in destinatario
+        const pill = document.createElement('span'); pill.className = 'pill';
+        const addr = t.slice(0, -1);
+        pill.textContent = addr.split('@')[0]; pill.title = addr; pill.setAttribute('aria-label', addr);
+        well.insertBefore(pill, input); input.textContent = '';
+      }
+    });
+    well.appendChild(input);
+    return { well, input };
+  }
+
+  document.getElementById('native-replyall').addEventListener('click', () => {
+    setTimeout(() => {
+      const host = document.getElementById('compose-host'); host.innerHTML = '';
+      const form = document.createElement('div'); form.setAttribute('role', 'form');
+      const to = makeWell('A', true);
+      const pill = document.createElement('span'); pill.className = 'pill'; pill.textContent = 'Marta'; pill.title = 'marta@x.com';
+      to.well.insertBefore(pill, to.input);                // destinatario gia' presente: mostra solo il nome
+      const row = document.createElement('div'); row.appendChild(to.well);
+      const showCc = document.createElement('button'); showCc.textContent = 'Cc'; showCc.setAttribute('aria-label', 'Cc');
+      showCc.addEventListener('click', () => {
+        const cc = makeWell('Cc', true); row.after(cc.well); showCc.remove();
+      });
+      row.appendChild(showCc);
+      form.appendChild(row);
+      host.appendChild(form);
+    }, 500);
+  });
+</script>
+<script src="../extension/content.js"></script>
+</body>
+</html>

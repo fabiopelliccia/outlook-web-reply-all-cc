@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title>Rispondi a tutti + CC</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { width: 340px; margin: 0; padding: 14px; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
+    h1 { font-size: 15px; margin: 0 0 10px; }
+    label { display: block; margin-bottom: 4px; }
+    textarea { box-sizing: border-box; width: 100%; height: 110px; font: inherit; padding: 6px; resize: vertical; }
+    .row { display: flex; gap: 8px; margin-top: 8px; }
+    button { font: inherit; padding: 6px 12px; cursor: pointer; }
+    button.primary { flex: 1; background: #0f6cbd; color: #fff; border: 0; border-radius: 4px; }
+    button.primary:hover { background: #115ea3; }
+    #status { min-height: 18px; margin-top: 8px; }
+    #status.err { color: #c50f1f; }
+    #status.ok { color: #107c10; }
+    details { margin-top: 12px; }
+    #report { width: 100%; height: 120px; font: 11px/1.3 Consolas, monospace; }
+    .hint { opacity: .7; font-size: 12px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Rispondi a tutti + CC</h1>
+
+  <label for="addresses">Indirizzi da mettere in CC (uno per riga, o separati da ";"):</label>
+  <textarea id="addresses" spellcheck="false"></textarea>
+  <div class="row">
+    <button id="save">Salva</button>
+    <button id="run" class="primary">Rispondi a tutti + CC</button>
+  </div>
+  <div id="status" role="status"></div>
+  <div class="hint">Il pulsante agisce sul messaggio aperto o selezionato in Outlook sul web. Scorciatoia: Alt+Shift+C.</div>
+
+  <details>
+    <summary>Diagnostica</summary>
+    <div class="hint">Se il pulsante non funziona: apri Outlook sul web con un messaggio selezionato, poi premi "Crea diagnostica" e invia il testo (gli indirizzi sono oscurati).</div>
+    <div class="row"><button id="diag">Crea diagnostica</button><button id="copy">Copia</button></div>
+    <textarea id="report" readonly></textarea>
+  </details>
+
+  <script src="popup.js"></script>
+</body>
+</html>
